@@ -4,40 +4,42 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
 import javax.persistence.*;
+import java.util.Date;
+import java.util.Random;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Entity
 @Table(name = "documents")
 @ApiModel(description = "All details about documents. ")
 public class Document {
+
+    @Id
     @ApiModelProperty(notes = "The database generated document ID")
-    private long documentId;
+    private long documentId = (int) (new Date().getTime()/1000);
 
     @ApiModelProperty(notes = "The document name")
     private String documentName;
 
-    @ApiModelProperty(notes = "The document extension")
-    private String documentExtension;
-
     @ApiModelProperty(notes = "The document category")
     private String documentCategory;
 
+    private byte[] documentData;
 
     public Document() {}
 
-    public Document(long documentId, String documentName, String documentExtension, String documentCategory) {
+    public Document(long documentId, String documentName, String documentCategory, byte[] documentData) {
         this.documentId = documentId;
         this.documentName = documentName;
-        this.documentExtension = documentExtension;
         this.documentCategory = documentCategory;
+        this.documentData = documentData;
     }
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @Column(name = "document_id", nullable = false)
     public long getDocumentId() {
         return documentId;
     }
 
-    public void setDocumentId(long id) {
+    public void setDocumentId(long documentId) {
         this.documentId = documentId;
     }
 
@@ -50,13 +52,13 @@ public class Document {
         this.documentName = documentName;
     }
 
-    @Column(name = "document_extension", nullable = false)
-    public String getDocumentExtension() {
-        return documentExtension;
+    @Column(name = "document_data", nullable = false)
+    public byte[] getDocumentData() {
+        return documentData;
     }
 
-    public void setDocumentExtension(String documentExtension) {
-        this.documentExtension = documentExtension;
+    public void setDocumentData(byte[] documentData) {
+        this.documentData = documentData;
     }
 
     @Column(name = "document_category", nullable = false)
@@ -68,9 +70,11 @@ public class Document {
         this.documentCategory = documentCategory;
     }
 
+
+
     @Override
     public String toString() {
-        return "Document [id=" + documentId + ", documentName=" + documentName + ", documentExtension=" + documentExtension + "]";
+        return "Document [id=" + documentId + ", documentName=" + documentName + "]";
     }
 
 }

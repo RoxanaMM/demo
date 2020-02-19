@@ -1,22 +1,37 @@
 package com.example.demo.controller;
 
+import com.example.demo.category.Category;
 import com.example.demo.model.Document;
+import com.example.demo.payload.UploadFileResponse;
 import com.example.demo.repository.DocumentRepository;
+import com.example.demo.service.FileStorageService;
 import io.swagger.annotations.*;
+import org.apache.tomcat.util.http.fileupload.impl.IOFileUploadException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
+import org.springframework.data.rest.core.annotation.Description;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import javax.transaction.Transactional;
 import javax.validation.Valid;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static org.springframework.web.bind.annotation.RequestMethod.POST;
 
 
 // atentie la faptul ca scriptul de data.sql nu ruleaza la fiecare build
@@ -26,12 +41,13 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1")
-@Api(value = "Document Management System")
+@Api(value = "Document Controller")
 public class DocumentController {
 
     @Autowired
     private DocumentRepository documentRepository;
-
+    @Autowired
+    private FileStorageService fileStorageService;
 
     @ApiOperation(value = "View a list of available documents", response = List.class)
     @ApiResponses(value = {@ApiResponse(code = 200, message = "Successfully retrieved list"),
@@ -45,27 +61,36 @@ public class DocumentController {
 
     @ApiOperation(value = "Get an Document by category")
     @GetMapping("/documents/{documentCategory}")
-    public List<Document> getDocumentByCategory(
-            @ApiParam(value = "Document category from which the document objects will retrieved", required = true)
+    public List<String> getDocumentByCategory(
+            @ApiParam(value = "You can choose the category from which you want to retrieve documents. There are quite a few categories here: ", required = true)
             @PathVariable(value = "documentCategory") String documentCategory)
-            throws ResourceNotFoundException {
-        List<Document> documents = new ArrayList<Document>();
-        documents = documentRepository.findByCategory(documentCategory);
-        //aici poate bubui daca nu gaseste nimic
-        // atentie
-        return documents;
+            throws ResourceNotFoundException, SQLException {
+        List<String> documentNamesMatchingCategory = new ArrayList<String>();
+        documentNamesMatchingCategory = documentRepository.findByCategory(documentCategory);
+        return documentNamesMatchingCategory;
     }
 
-    @ApiOperation(value = "Add a document")
     @PostMapping("/upload")
-    public Document createDocument(
-            @ApiParam(value = "Upload a document", required = true)
-            @Valid @RequestBody Document document) {
-        return documentRepository.save(document);
+    @Transactional
+    @ApiOperation(value = "File upload", notes = "Upload a file to an ID")
+    public @ResponseBody
+    String uploadFile(MultipartFile file) throws IOException {
+        Document document = fileStorageService.checkValidityAndReturnDoc(file);
+        documentRepository.save(document);
+        return ResponseEntity.ok().toString();
     }
+
+//    @PostMapping("/uploadMultipleFiles")
+//    public List<UploadFileResponse> uploadMultipleFiles(@RequestParam("files") MultipartFile[] files) {
+//        return Arrays.asList(files)
+//                .stream()
+//                .map(file -> uploadFile(file))
+//                .collect(Collectors.toList());
+//    }
+
 
     @ResponseBody
-    @RequestMapping(method = RequestMethod.POST, path = {"/download"})
+    @RequestMapping(method = POST, path = {"/download"})
     public ResponseEntity<InputStreamResource> downloadFile(@RequestBody String pathFile) throws IOException {
         // out.println(pathFile);
         InputStreamResource resource = new InputStreamResource(new FileInputStream(pathFile));
