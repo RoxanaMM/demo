@@ -10,7 +10,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 @Entity
 @Table(name = "documents")
-@ApiModel(description = "All details about documents. ")
+@ApiModel(description = "All details about documents.")
 public class Document {
 
     @Id
@@ -69,8 +69,6 @@ public class Document {
     public void setDocumentCategory(String documentCategory) {
         this.documentCategory = documentCategory;
     }
-
-
 
     @Override
     public String toString() {

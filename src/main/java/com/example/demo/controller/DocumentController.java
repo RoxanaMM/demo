@@ -1,15 +1,13 @@
 package com.example.demo.controller;
 
-import com.example.demo.category.Category;
 import com.example.demo.model.Document;
-import com.example.demo.payload.UploadFileResponse;
 import com.example.demo.repository.DocumentRepository;
 import com.example.demo.service.FileStorageService;
 import io.swagger.annotations.*;
-import org.apache.tomcat.util.http.fileupload.impl.IOFileUploadException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.InputStreamResource;
-import org.springframework.data.rest.core.annotation.Description;
+import org.springframework.core.io.Resource;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -18,18 +16,15 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.transaction.Transactional;
-import javax.validation.Valid;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
 
@@ -59,62 +54,53 @@ public class DocumentController {
         return documentRepository.findAll();
     }
 
-    @ApiOperation(value = "Get an Document by category")
+    @ApiOperation(value = "Get Documents filtered by a category")
     @GetMapping("/documents/{documentCategory}")
-    public List<String> getDocumentByCategory(
+    public List<Document> getDocumentByCategory(
             @ApiParam(value = "You can choose the category from which you want to retrieve documents. There are quite a few categories here: ", required = true)
             @PathVariable(value = "documentCategory") String documentCategory)
             throws ResourceNotFoundException, SQLException {
-        List<String> documentNamesMatchingCategory = new ArrayList<String>();
-        documentNamesMatchingCategory = documentRepository.findByCategory(documentCategory);
-        return documentNamesMatchingCategory;
+        List<Document> documentsMatchingCategory = new ArrayList<Document>();
+        documentsMatchingCategory = documentRepository.findByCategory(documentCategory);
+        return documentsMatchingCategory;
     }
+
+    // HARDCODED CATEGORY FOR FILE UPLOAD
+
 
     @PostMapping("/upload")
     @Transactional
     @ApiOperation(value = "File upload", notes = "Upload a file to an ID")
     public @ResponseBody
-    String uploadFile(MultipartFile file) throws IOException {
+    Document uploadFile(MultipartFile file) throws IOException, SQLException {
         Document document = fileStorageService.checkValidityAndReturnDoc(file);
-        documentRepository.save(document);
-        return ResponseEntity.ok().toString();
+        documentRepository.saveDocument(document, file);
+        return document;
     }
 
-//    @PostMapping("/uploadMultipleFiles")
-//    public List<UploadFileResponse> uploadMultipleFiles(@RequestParam("files") MultipartFile[] files) {
-//        return Arrays.asList(files)
-//                .stream()
-//                .map(file -> uploadFile(file))
-//                .collect(Collectors.toList());
-//    }
+    // THE BLOB ALTERS THE DATA THAT IS RETRIEVED AT DOWNLOAD TIME
+    //IT CANNOT BE UNDERSTOOD
 
 
-    @ResponseBody
-    @RequestMapping(method = POST, path = {"/download"})
-    public ResponseEntity<InputStreamResource> downloadFile(@RequestBody String pathFile) throws IOException {
-        // out.println(pathFile);
-        InputStreamResource resource = new InputStreamResource(new FileInputStream(pathFile));
-        File fileToDownload = resource.getFile();
+    // file download
+    @RequestMapping(path = "/download", method = RequestMethod.GET)
+    @ApiOperation(value = "File download", notes = "Type in the name of a file you previously uploaded. After you click " +
+            "on the Execute button, the Download file button will appear. The downloaded file will be placed in the " +
+            "folder in which the project is ( you can see it inside the project too, under the target folder)")
 
+    public ResponseEntity<Resource> download(String param) throws IOException {
 
-        //atentie aici ca nu stiu tipul de fisier pe care ei vor sa il incarce
+        File file = new File(param);
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Cache-Control", "no-cache, no-store, must-revalidate");
+        headers.add("Pragma", "no-cache");
+        headers.add("Expires", "0");
+        Path path = Paths.get(file.getAbsolutePath());
+        ByteArrayResource resource = new ByteArrayResource(Files.readAllBytes(path));
 
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=" + fileToDownload.getName())
-                .contentLength(fileToDownload.length())
-                .contentType(MediaType.parseMediaType(MediaType.APPLICATION_OCTET_STREAM_VALUE))
-                .body(resource);
+        return ResponseEntity.ok().headers(headers).contentLength(file.length())
+                .contentType(MediaType.parseMediaType("application/octet-stream")).body(resource);
     }
 
-//    @PostMapping(value = "/downloads", produces = APPLICATION_MS_WORD_VALUE)
-//    public ResponseEntity<byte[]> downloadFile1(@RequestBody String pathFile) throws IOException {
-//        byte[] content = null;downloadDocumentService.downloadFile(pathFile);
-//
-//        return ResponseEntity.ok()
-//                .contentLength(content.length)
-//                .header(HttpHeaders.CONTENT_TYPE, APPLICATION_MS_WORD_VALUE)
-//                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + "File.docx"))
-//                             .body(null);
-//    }
 
 }
