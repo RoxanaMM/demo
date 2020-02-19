@@ -4,14 +4,19 @@ import com.example.demo.model.Document;
 import com.example.demo.repository.DocumentRepository;
 import io.swagger.annotations.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import java.util.HashMap;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -20,6 +25,8 @@ public class DocumentController {
 
     @Autowired
     private DocumentRepository documentRepository;
+
+    private static final String APPLICATION_MS_WORD_VALUE = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 
     @ApiOperation(value = "View a list of available documents", response = List.class)
     @ApiResponses(value = {@ApiResponse(code = 200, message = "Successfully retrieved list"),
@@ -31,54 +38,51 @@ public class DocumentController {
         return documentRepository.findAll();
     }
 
-    @ApiOperation(value = "Get an Document by Id")
-    @GetMapping("/documents/{category}")
-    public ResponseEntity<Document> getDocumentById(
+    @ApiOperation(value = "Get an Document by category")
+    @GetMapping("/documents/{documentCategory}")
+    public List<Document> getDocumentByCategory(
             @ApiParam(value = "Document category from which the document objects will retrieved", required = true)
-            @PathVariable(value = "documentCategory") Long documentId)
+            @PathVariable(value = "documentCategory") String documentCategory)
             throws ResourceNotFoundException {
-        Document document = documentRepository.findById(documentId)
-                .orElseThrow(() -> new ResourceNotFoundException("Document not found for this id :: " + documentId));
-        return ResponseEntity.ok().body(document);
+        List<Document> documents = new ArrayList<Document>();
+        documents = documentRepository.findByCategory(documentCategory);
+        //aici poate bubui daca nu gaseste nimic
+        // atentie
+        return documents;
     }
 
     @ApiOperation(value = "Add a document")
-    @PostMapping("/documents")
+    @PostMapping("/upload")
     public Document createDocument(
-            @ApiParam(value = "Document object store in database table", required = true)
+            @ApiParam(value = "Upload a document", required = true)
             @Valid @RequestBody Document document) {
         return documentRepository.save(document);
     }
 
-    @ApiOperation(value = "Update a document")
-    @PutMapping("/documents/{id}")
-    public ResponseEntity<Document> updateDocument(
-            @ApiParam(value = "Document Id to update Document object", required = true)
-            @PathVariable(value = "id") Long documentId,
-            @ApiParam(value = "Update Document object", required = true)
-            @Valid @RequestBody Document documentDetails) throws ResourceNotFoundException {
-        Document document = documentRepository.findById(documentDetails.getDocumentId())
-                .orElseThrow(() -> new ResourceNotFoundException("Document not found for this id :: " + documentId));
+    @ResponseBody
+    @RequestMapping(method = RequestMethod.POST, path = {"/download"})
+    public ResponseEntity<InputStreamResource> downloadFile(@RequestBody String pathFile) throws IOException {
+        // out.println(pathFile);
+        InputStreamResource resource = new InputStreamResource(new FileInputStream(pathFile));
+        File fileToDownload = resource.getFile();
 
-        document.setDocumentId(documentDetails.getDocumentId());
-        document.setDocumentName(documentDetails.getDocumentName());
-        document.setDocumentExtension(documentDetails.getDocumentExtension());
-        final Document updatedDocument = documentRepository.save(document);
-        return ResponseEntity.ok(updatedDocument);
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=" + fileToDownload.getName())
+                .contentLength(fileToDownload.length())
+                .contentType(MediaType.parseMediaType(MediaType.APPLICATION_OCTET_STREAM_VALUE))
+                .body(resource);
     }
 
-    @ApiOperation(value = "Delete an document")
-    @DeleteMapping("/documents/{id}")
-    public Map<String, Boolean> deleteDocument(
-            @ApiParam(value = "Document Id from which Documentobject will delete from database table", required = true)
-            @PathVariable(value = "id") Long documentId)
-            throws ResourceNotFoundException {
-        Document document = documentRepository.findById(documentId)
-                .orElseThrow(() -> new ResourceNotFoundException("Document not found for this id :: " + documentId));
+//    @PostMapping(value = "/downloads", produces = APPLICATION_MS_WORD_VALUE)
+//    public ResponseEntity<byte[]> downloadFile1(@RequestBody String pathFile) throws IOException {
+//        byte[] content = null;downloadDocumentService.downloadFile(pathFile);
+//
+//        return ResponseEntity.ok()
+//                .contentLength(content.length)
+//                .header(HttpHeaders.CONTENT_TYPE, APPLICATION_MS_WORD_VALUE)
+//                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + "File.docx"))
+//                             .body(null);
+//    }
 
-        documentRepository.delete(document);
-        Map<String, Boolean> response = new HashMap<>();
-        response.put("deleted", Boolean.TRUE);
-        return response;
-    }
 }

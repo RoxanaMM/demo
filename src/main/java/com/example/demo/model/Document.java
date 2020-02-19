@@ -24,10 +24,11 @@ public class Document {
 
     public Document() {}
 
-    public Document(long documentId, String documentName, String documentExtension) {
+    public Document(long documentId, String documentName, String documentExtension, String documentCategory) {
         this.documentId = documentId;
         this.documentName = documentName;
         this.documentExtension = documentExtension;
+        this.documentCategory = documentCategory;
     }
 
     @Id
