@@ -18,6 +18,12 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+
+// atentie la faptul ca scriptul de data.sql nu ruleaza la fiecare build
+//adaugare de teste
+//cod coverage
+
+
 @RestController
 @RequestMapping("/api/v1")
 @Api(value = "Document Management System")
@@ -26,7 +32,6 @@ public class DocumentController {
     @Autowired
     private DocumentRepository documentRepository;
 
-    private static final String APPLICATION_MS_WORD_VALUE = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 
     @ApiOperation(value = "View a list of available documents", response = List.class)
     @ApiResponses(value = {@ApiResponse(code = 200, message = "Successfully retrieved list"),
@@ -66,6 +71,8 @@ public class DocumentController {
         InputStreamResource resource = new InputStreamResource(new FileInputStream(pathFile));
         File fileToDownload = resource.getFile();
 
+
+        //atentie aici ca nu stiu tipul de fisier pe care ei vor sa il incarce
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=" + fileToDownload.getName())
