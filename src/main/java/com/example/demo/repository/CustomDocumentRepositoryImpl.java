@@ -2,8 +2,6 @@ package com.example.demo.repository;
 
 import com.example.demo.model.Document;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.util.StringUtils;
-import org.springframework.web.multipart.MultipartFile;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -17,20 +15,28 @@ public class CustomDocumentRepositoryImpl implements CustomDocumentRepository {
 
     @Autowired
     private DataSource dataSource;
+    private final String selectAllFromDB = "SELECT * FROM DOCUMENTS DOC WHERE";
+
+    private Document populateDocumentWithValFromDb(ResultSet resultSet) throws SQLException {
+        Document document = new Document();
+        document.setDocumentId(resultSet.getLong("document_id"));
+        document.setDocumentName(resultSet.getString("document_name"));
+        document.setDocumentCategory(resultSet.getString("document_category"));
+        document.setDocumentMimeType(resultSet.getString("document_mime_type"));
+        return document;
+    }
 
     @Override
     public List<Document> findByCategory(String documentCategory) throws SQLException {
         List<Document> documents = new ArrayList<>();
 
         try (Connection conn = dataSource.getConnection()) {
-            String sqlQuery = "SELECT DOC.DOCUMENT_NAME, DOC.DOCUMENT_CATEGORY FROM DOCUMENTS DOC WHERE DOC.DOCUMENT_CATEGORY LIKE ?";
+            String sqlQuery = selectAllFromDB + " DOC.DOCUMENT_CATEGORY LIKE ?";
             PreparedStatement preparedStatement = conn.prepareStatement(sqlQuery);
             preparedStatement.setString(1, "%" + documentCategory + "%");
             ResultSet resultSet = preparedStatement.executeQuery();
             while (resultSet.next()) {
-                Document document = new Document();
-                document.setDocumentName(resultSet.getString("document_name"));
-                document.setDocumentCategory(resultSet.getString("document_category"));
+                Document document = populateDocumentWithValFromDb(resultSet);
                 documents.add(document);
             }
             resultSet.close();
@@ -39,44 +45,37 @@ public class CustomDocumentRepositoryImpl implements CustomDocumentRepository {
         }
     }
 
-
-    //ce se intampla daca am mai multe documente cu acelasi nume?
     @Override
-    public List<Document> findByName(String documentName) throws SQLException {
-        List<Document> documents = new ArrayList<>();
+    public Document findByName(String documentName) throws SQLException {
+        Document document = new Document();
 
         try (Connection conn = dataSource.getConnection()) {
-            String sqlQuery = "SELECT DOC.DOCUMENT_NAME, DOC.DOCUMENT_CATEGORY, DOC.DOCUMENT_MEDIA_TYPE, DOC.DOCUMENT_DATA FROM DOCUMENTS DOC WHERE DOC.DOCUMENT_NAME LIKE ?";
+            String sqlQuery = selectAllFromDB + " DOC.DOCUMENT_NAME LIKE ?";
             PreparedStatement preparedStatement = conn.prepareStatement(sqlQuery);
             preparedStatement.setString(1, "%" + documentName + "%");
             ResultSet resultSet = preparedStatement.executeQuery();
-            while(resultSet.next()) {
-                Document document = new Document();
-                document.setDocumentName(resultSet.getString("document_name"));
-                document.setDocumentCategory(resultSet.getString("document_category"));
-                document.setDocumentMediaType(resultSet.getString("document_media_type"));
-                document.setDocumentData(resultSet.getBytes("document_data"));
-                documents.add(document);
+            if (resultSet.next()) {
+                document = populateDocumentWithValFromDb(resultSet);
             }
             resultSet.close();
             preparedStatement.close();
-            return documents;
+            return document;
         }
     }
 
     @Override
-    public Document saveDocument(Document document, MultipartFile file) throws SQLException {
-        String fileName = StringUtils.cleanPath(file.getOriginalFilename());
+    public Document saveDocument(String fileName) throws SQLException {
+        Document document = new Document();
         try (Connection conn = dataSource.getConnection()) {
-            String sqlQuery = "INSERT INTO DOCUMENTS VALUES ( ?,?,?,?,?)";
+            String sqlQuery = "INSERT INTO DOCUMENTS VALUES ( ?,?,?,?)";
             PreparedStatement preparedStatement = conn.prepareStatement(sqlQuery);
             preparedStatement.setLong(1, document.getDocumentId());
             preparedStatement.setString(2, fileName);
             preparedStatement.setString(3, document.getDocumentCategory());
-            preparedStatement.setBytes(4, document.getDocumentData());
-            preparedStatement.setString(5, document.getDocumentMediaType());
+            preparedStatement.setString(4, document.getDocumentMimeType());
 
             int rowsInserted = preparedStatement.executeUpdate();
+            document.setDocumentName(fileName);
             preparedStatement.close();
         }
         return document;

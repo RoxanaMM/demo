@@ -4,10 +4,8 @@ import com.example.demo.model.Document;
 import com.example.demo.repository.DocumentRepository;
 import com.example.demo.service.FileStorageService;
 import io.swagger.annotations.*;
-import org.apache.tomcat.util.codec.binary.Base64;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.data.rest.webmvc.ResourceNotFoundException;
 import org.springframework.http.HttpHeaders;
@@ -18,7 +16,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.transaction.Transactional;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -27,10 +24,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.springframework.web.bind.annotation.RequestMethod.POST;
-
-
-// atentie la faptul ca scriptul de data.sql nu ruleaza la fiecare build
 //adaugare de teste
 //cod coverage
 
@@ -44,6 +37,7 @@ public class DocumentController {
     private DocumentRepository documentRepository;
     @Autowired
     private FileStorageService fileStorageService;
+    private static final String canonicProjectPath = "src/main/resources/documents/";
 
     @ApiOperation(value = "View a list of available documents", response = List.class)
     @ApiResponses(value = {@ApiResponse(code = 200, message = "Successfully retrieved list"),
@@ -70,50 +64,48 @@ public class DocumentController {
     @Transactional
     @ApiOperation(value = "File upload", notes = "Upload a file to an ID")
     public @ResponseBody
-    Document uploadFile(MultipartFile file) throws IOException, SQLException {
-        Document document = fileStorageService.checkValidityAndReturnDoc(file);
-        documentRepository.saveDocument(document, file);
+    Document uploadFile(MultipartFile file, String folderCategory) throws IOException, SQLException {
+        Document document = new Document();
+        if (file.isEmpty()) {
+            throw new IOException("Please insert a file that is not empty!");
+        }
+        try {
+            fileStorageService.checkValidityOfDoc(file, folderCategory);
+            documentRepository.saveDocument(file.getOriginalFilename());
+
+            byte[] bytes = file.getBytes();
+            File f = new File(canonicProjectPath + folderCategory).getCanonicalFile();
+            if (!f.exists()) {
+                f.mkdir();
+            }
+
+            File canonicalFile = new File(canonicProjectPath + folderCategory + "/" + file.getOriginalFilename()).getCanonicalFile();
+            Path path = Paths.get(String.valueOf(canonicalFile));
+            Files.write(path, bytes);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         return document;
     }
 
-    // THE BLOB ALTERS THE DATA THAT IS RETRIEVED AT DOWNLOAD TIME
-    //IT CANNOT BE UNDERSTOOD
 
-
-    // file download
-    @RequestMapping(path = "download4", method = RequestMethod.GET)
-    public ResponseEntity<Resource> download7(String param) throws IOException, SQLException {
-
-        File file = new File(param);
-        HttpHeaders headers = new HttpHeaders();
-        headers.add("Cache-Control", "no-cache, no-store, must-revalidate");
-        headers.add("Pragma", "no-cache");
-        headers.add("Expires", "0");
-        Path path = Paths.get(file.getAbsolutePath());
-        ByteArrayResource resource = new ByteArrayResource(Files.readAllBytes(path));
-        List<Document> document = documentRepository.findByName(param);
-        return ResponseEntity.ok().headers(headers).contentLength(file.length())
-                .contentType(MediaType.parseMediaType(document.get(0).getDocumentMediaType())).body(resource);
-    }
-
-    // file download
-    @RequestMapping(path = "/download", method = RequestMethod.GET)
-    @ApiOperation(value = "File download", notes = "Db si populated for demo purposes with : invoice.pdf, receipt.png, contract.pdf. If you do not want to upload a document" +
-            "before the download operations, you can choose one of the document names from above to be retreived and the downloaded from db. Type in the name of a file you previously uploaded. After you click " +
-            "on the Execute button, the Download file button will appear. The downloaded file will be placed in the " +
-            "folder in which the project is ( you can see it inside the project too, under the target folder)")
-    public ResponseEntity<Resource> download(String documentName) throws IOException, SQLException {
+    @RequestMapping(path = "download", method = RequestMethod.GET)
+    public ResponseEntity<Resource> download(String documentName, String documentCategory) throws IOException, SQLException {
 
         File file = new File(documentName);
         HttpHeaders headers = new HttpHeaders();
         headers.add("Cache-Control", "no-cache, no-store, must-revalidate");
         headers.add("Pragma", "no-cache");
         headers.add("Expires", "0");
-        List<Document>  document = documentRepository.findByName(documentName);
-        ByteArrayResource resource = new ByteArrayResource(document.get(0).getDocumentData());
+
+        File canonicalFile = new File(canonicProjectPath + documentCategory + "/" + documentName).getCanonicalFile();
+        Path path = Paths.get(String.valueOf(canonicalFile));
+        ByteArrayResource resource = new ByteArrayResource(Files.readAllBytes(path));
+        Document document = documentRepository.findByName(documentName);
 
         return ResponseEntity.ok().headers(headers).contentLength(file.length())
-                .contentType(MediaType.parseMediaType(document.get(0).getDocumentMediaType())).body(resource);
+                .contentType(MediaType.parseMediaType("application/octet-stream")).body(resource);
     }
 
 

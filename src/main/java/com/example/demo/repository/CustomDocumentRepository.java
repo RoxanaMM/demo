@@ -7,9 +7,9 @@ import java.sql.SQLException;
 import java.util.List;
 
 public interface CustomDocumentRepository {
-    List<Document> findByName(String documentName) throws SQLException;
+    Document findByName(String documentName) throws SQLException;
 
     List<Document> findByCategory(String documentCategory) throws SQLException;
 
-    Document saveDocument(Document document, MultipartFile file) throws SQLException;
+    Document saveDocument(String fileName) throws SQLException;
 }

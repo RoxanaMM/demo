@@ -2,12 +2,9 @@ package com.example.demo.model;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
-import org.springframework.http.MediaType;
 
 import javax.persistence.*;
 import java.util.Date;
-import java.util.Random;
-import java.util.concurrent.atomic.AtomicInteger;
 
 @Entity
 @Table(name = "documents")
@@ -15,8 +12,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class Document {
 
     @Id
-    @ApiModelProperty(notes = "The database generated document ID")
-    private long documentId = (int) (new Date().getTime()/1000);
+    @GeneratedValue
+    @Column(name = "document_id", updatable = false, nullable = false)
+    private long documentId;
 
     @ApiModelProperty(notes = "The document name")
     private String documentName;
@@ -24,20 +22,16 @@ public class Document {
     @ApiModelProperty(notes = "The document category")
     private String documentCategory;
 
-    private byte[] documentData;
-    private String documentMediaType;
+    private String documentMimeType;
 
-    public Document() {}
-
-    public Document(long documentId, String documentName, String documentCategory, byte[] documentData, String documentMediaType) {
-        this.documentId = documentId;
-        this.documentName = documentName;
-        this.documentCategory = documentCategory;
-        this.documentData = documentData;
-        this.documentMediaType = documentMediaType;
+    public Document() {
     }
 
-    @Column(name = "document_id", nullable = false)
+    public Document(String documentName) {
+        this.documentName = documentName;
+        this.documentId = getDocumentId();
+    }
+
     public long getDocumentId() {
         return documentId;
     }
@@ -55,15 +49,6 @@ public class Document {
         this.documentName = documentName;
     }
 
-    @Column(name = "document_data", nullable = false)
-    public byte[] getDocumentData() {
-        return documentData;
-    }
-
-    public void setDocumentData(byte[] documentData) {
-        this.documentData = documentData;
-    }
-
     @Column(name = "document_category", nullable = false)
     public String getDocumentCategory() {
         return documentCategory;
@@ -73,13 +58,13 @@ public class Document {
         this.documentCategory = documentCategory;
     }
 
-    @Column(name = "document_media_type", nullable = false)
-    public String getDocumentMediaType() {
-        return documentMediaType;
+    @Column(name = "document_mime_type", nullable = false)
+    public String getDocumentMimeType() {
+        return documentMimeType;
     }
 
-    public void setDocumentMediaType(String documentMediaType) {
-        this.documentMediaType = documentMediaType;
+    public void setDocumentMimeType(String documentMediaType) {
+        this.documentMimeType = documentMediaType;
     }
 
     @Override
