@@ -42,23 +42,25 @@ public class CustomDocumentRepositoryImpl implements CustomDocumentRepository {
 
     //ce se intampla daca am mai multe documente cu acelasi nume?
     @Override
-    public Document findByName(String documentName) throws SQLException {
-        Document document = new Document();
+    public List<Document> findByName(String documentName) throws SQLException {
+        List<Document> documents = new ArrayList<>();
 
         try (Connection conn = dataSource.getConnection()) {
             String sqlQuery = "SELECT DOC.DOCUMENT_NAME, DOC.DOCUMENT_CATEGORY, DOC.DOCUMENT_MEDIA_TYPE, DOC.DOCUMENT_DATA FROM DOCUMENTS DOC WHERE DOC.DOCUMENT_NAME LIKE ?";
             PreparedStatement preparedStatement = conn.prepareStatement(sqlQuery);
             preparedStatement.setString(1, "%" + documentName + "%");
             ResultSet resultSet = preparedStatement.executeQuery();
-            if(resultSet.next()) {
+            while(resultSet.next()) {
+                Document document = new Document();
                 document.setDocumentName(resultSet.getString("document_name"));
                 document.setDocumentCategory(resultSet.getString("document_category"));
                 document.setDocumentMediaType(resultSet.getString("document_media_type"));
                 document.setDocumentData(resultSet.getBytes("document_data"));
+                documents.add(document);
             }
             resultSet.close();
             preparedStatement.close();
-            return document;
+            return documents;
         }
     }
 

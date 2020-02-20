@@ -66,7 +66,7 @@ public class DocumentController {
         return documentsMatchingCategory;
     }
 
-    @PostMapping("/upload")
+    @PostMapping(value = "/upload")
     @Transactional
     @ApiOperation(value = "File upload", notes = "Upload a file to an ID")
     public @ResponseBody
@@ -91,14 +91,15 @@ public class DocumentController {
         headers.add("Expires", "0");
         Path path = Paths.get(file.getAbsolutePath());
         ByteArrayResource resource = new ByteArrayResource(Files.readAllBytes(path));
-        Document document = documentRepository.findByName(param);
+        List<Document> document = documentRepository.findByName(param);
         return ResponseEntity.ok().headers(headers).contentLength(file.length())
-                .contentType(MediaType.parseMediaType(document.getDocumentMediaType())).body(resource);
+                .contentType(MediaType.parseMediaType(document.get(0).getDocumentMediaType())).body(resource);
     }
 
     // file download
     @RequestMapping(path = "/download", method = RequestMethod.GET)
-    @ApiOperation(value = "File download", notes = "Type in the name of a file you previously uploaded. After you click " +
+    @ApiOperation(value = "File download", notes = "Db si populated for demo purposes with : invoice.pdf, receipt.png, contract.pdf. If you do not want to upload a document" +
+            "before the download operations, you can choose one of the document names from above to be retreived and the downloaded from db. Type in the name of a file you previously uploaded. After you click " +
             "on the Execute button, the Download file button will appear. The downloaded file will be placed in the " +
             "folder in which the project is ( you can see it inside the project too, under the target folder)")
     public ResponseEntity<Resource> download(String documentName) throws IOException, SQLException {
@@ -108,11 +109,11 @@ public class DocumentController {
         headers.add("Cache-Control", "no-cache, no-store, must-revalidate");
         headers.add("Pragma", "no-cache");
         headers.add("Expires", "0");
-        Document document = documentRepository.findByName(documentName);
-        ByteArrayResource resource = new ByteArrayResource(document.getDocumentData());
+        List<Document>  document = documentRepository.findByName(documentName);
+        ByteArrayResource resource = new ByteArrayResource(document.get(0).getDocumentData());
 
         return ResponseEntity.ok().headers(headers).contentLength(file.length())
-                .contentType(MediaType.parseMediaType(document.getDocumentMediaType())).body(resource);
+                .contentType(MediaType.parseMediaType(document.get(0).getDocumentMediaType())).body(resource);
     }
 
 
