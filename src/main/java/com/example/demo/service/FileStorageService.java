@@ -38,6 +38,7 @@ public class FileStorageService {
         document.setDocumentName(file.getName());
         document.setDocumentCategory(VALUES.get(RANDOM.nextInt(SIZE)).name());
         document.setDocumentData(file.getBytes());
+        document.setDocumentMediaType(file.getContentType());
         return document;
     }
 }

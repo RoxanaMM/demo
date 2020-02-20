@@ -2,6 +2,7 @@ package com.example.demo.model;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import org.springframework.http.MediaType;
 
 import javax.persistence.*;
 import java.util.Date;
@@ -24,14 +25,16 @@ public class Document {
     private String documentCategory;
 
     private byte[] documentData;
+    private String documentMediaType;
 
     public Document() {}
 
-    public Document(long documentId, String documentName, String documentCategory, byte[] documentData) {
+    public Document(long documentId, String documentName, String documentCategory, byte[] documentData, String documentMediaType) {
         this.documentId = documentId;
         this.documentName = documentName;
         this.documentCategory = documentCategory;
         this.documentData = documentData;
+        this.documentMediaType = documentMediaType;
     }
 
     @Column(name = "document_id", nullable = false)
@@ -68,6 +71,15 @@ public class Document {
 
     public void setDocumentCategory(String documentCategory) {
         this.documentCategory = documentCategory;
+    }
+
+    @Column(name = "document_media_type", nullable = false)
+    public String getDocumentMediaType() {
+        return documentMediaType;
+    }
+
+    public void setDocumentMediaType(String documentMediaType) {
+        this.documentMediaType = documentMediaType;
     }
 
     @Override

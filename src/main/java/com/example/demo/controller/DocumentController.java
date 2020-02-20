@@ -4,6 +4,7 @@ import com.example.demo.model.Document;
 import com.example.demo.repository.DocumentRepository;
 import com.example.demo.service.FileStorageService;
 import io.swagger.annotations.*;
+import org.apache.tomcat.util.codec.binary.Base64;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.InputStreamResource;
@@ -65,9 +66,6 @@ public class DocumentController {
         return documentsMatchingCategory;
     }
 
-    // HARDCODED CATEGORY FOR FILE UPLOAD
-
-
     @PostMapping("/upload")
     @Transactional
     @ApiOperation(value = "File upload", notes = "Upload a file to an ID")
@@ -83,12 +81,8 @@ public class DocumentController {
 
 
     // file download
-    @RequestMapping(path = "/download", method = RequestMethod.GET)
-    @ApiOperation(value = "File download", notes = "Type in the name of a file you previously uploaded. After you click " +
-            "on the Execute button, the Download file button will appear. The downloaded file will be placed in the " +
-            "folder in which the project is ( you can see it inside the project too, under the target folder)")
-
-    public ResponseEntity<Resource> download(String param) throws IOException {
+    @RequestMapping(path = "download4", method = RequestMethod.GET)
+    public ResponseEntity<Resource> download7(String param) throws IOException, SQLException {
 
         File file = new File(param);
         HttpHeaders headers = new HttpHeaders();
@@ -97,9 +91,28 @@ public class DocumentController {
         headers.add("Expires", "0");
         Path path = Paths.get(file.getAbsolutePath());
         ByteArrayResource resource = new ByteArrayResource(Files.readAllBytes(path));
+        Document document = documentRepository.findByName(param);
+        return ResponseEntity.ok().headers(headers).contentLength(file.length())
+                .contentType(MediaType.parseMediaType(document.getDocumentMediaType())).body(resource);
+    }
+
+    // file download
+    @RequestMapping(path = "/download", method = RequestMethod.GET)
+    @ApiOperation(value = "File download", notes = "Type in the name of a file you previously uploaded. After you click " +
+            "on the Execute button, the Download file button will appear. The downloaded file will be placed in the " +
+            "folder in which the project is ( you can see it inside the project too, under the target folder)")
+    public ResponseEntity<Resource> download(String documentName) throws IOException, SQLException {
+
+        File file = new File(documentName);
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Cache-Control", "no-cache, no-store, must-revalidate");
+        headers.add("Pragma", "no-cache");
+        headers.add("Expires", "0");
+        Document document = documentRepository.findByName(documentName);
+        ByteArrayResource resource = new ByteArrayResource(document.getDocumentData());
 
         return ResponseEntity.ok().headers(headers).contentLength(file.length())
-                .contentType(MediaType.parseMediaType("application/octet-stream")).body(resource);
+                .contentType(MediaType.parseMediaType(document.getDocumentMediaType())).body(resource);
     }
 
 
