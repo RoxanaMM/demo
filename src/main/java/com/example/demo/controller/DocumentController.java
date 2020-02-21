@@ -1,9 +1,12 @@
 package com.example.demo.controller;
 
+import com.example.demo.exceptionHandler.CustomExceptionHandlerInternalServerError;
 import com.example.demo.model.Document;
 import com.example.demo.repository.DocumentRepository;
 import com.example.demo.service.FileStorageService;
 import io.swagger.annotations.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
@@ -24,9 +27,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-//adaugare de teste
-//cod coverage
-
 
 @RestController
 @RequestMapping("/api/v1")
@@ -37,41 +37,44 @@ public class DocumentController {
     private DocumentRepository documentRepository;
     @Autowired
     private FileStorageService fileStorageService;
+    private static final Logger LOGGER= LoggerFactory.getLogger(DocumentController.class);
     private static final String canonicProjectPath = "src/main/resources/documents/";
 
-    @ApiOperation(value = "View a list of available documents", response = List.class)
-    @ApiResponses(value = {@ApiResponse(code = 200, message = "Successfully retrieved list"),
-            @ApiResponse(code = 401, message = "You are not authorized to view the resource"),
-            @ApiResponse(code = 403, message = "Accessing the resource you were trying to reach is forbidden"),
-            @ApiResponse(code = 404, message = "The resource you were trying to reach is not found")})
+    @ApiOperation(value = "List of available documents", response = List.class)
+    @ApiResponses(value = {@ApiResponse(code = 200, message = "Success"),
+            @ApiResponse(code = 401, message = "Unauthorized"),
+            @ApiResponse(code = 403, message = "Forbidden"),
+            @ApiResponse(code = 404, message = "Not found")})
     @GetMapping("/documents")
     public List<Document> getAllDocuments() {
         return documentRepository.findAll();
     }
 
-    @ApiOperation(value = "Get Documents filtered by a category")
+    @ApiOperation(value = "List of documents filtered by category")
     @GetMapping("/documents/{documentCategory}")
     public List<Document> getDocumentByCategory(
-            @ApiParam(value = "You can choose the category from which you want to retrieve documents. There are quite a few categories here: ", required = true)
+            @ApiParam(value = " ", required = true)
             @PathVariable(value = "documentCategory") String documentCategory)
             throws ResourceNotFoundException, SQLException {
         List<Document> documentsMatchingCategory = new ArrayList<Document>();
         documentsMatchingCategory = documentRepository.findByCategory(documentCategory);
+        LOGGER.info("documents were found");
         return documentsMatchingCategory;
     }
 
-    @PostMapping(value = "/upload")
+    @ApiOperation(value = "Upload a file and a category for it")
     @Transactional
-    @ApiOperation(value = "File upload", notes = "Upload a file to an ID")
+    @PostMapping(value = "/documents/upload")
     public @ResponseBody
-    Document uploadFile(MultipartFile file, String folderCategory) throws IOException, SQLException {
+    Document uploadFile(MultipartFile file, String folderCategory) throws IOException, SQLException, CustomExceptionHandlerInternalServerError {
         Document document = new Document();
-        if (file.isEmpty()) {
-            throw new IOException("Please insert a file that is not empty!");
+        if (file == null || file.isEmpty()) {
+            throw new CustomExceptionHandlerInternalServerError("Please insert a file that is not empty!");
         }
         try {
-            fileStorageService.checkValidityOfDoc(file, folderCategory);
-            documentRepository.saveDocument(file.getOriginalFilename());
+            document = fileStorageService.checkValidityAndReturnDoc(file, folderCategory);
+            documentRepository.saveDocument(document, file.getOriginalFilename());
+            LOGGER.info("file valid, saved in db");
 
             byte[] bytes = file.getBytes();
             File f = new File(canonicProjectPath + folderCategory).getCanonicalFile();
@@ -84,15 +87,18 @@ public class DocumentController {
             Files.write(path, bytes);
 
         } catch (IOException e) {
-            e.printStackTrace();
+            LOGGER.error("IO/NIO problem");
         }
         return document;
     }
 
+    @ApiOperation(value = "Download a file with a category")
+    @GetMapping("/documents/download")
+    public ResponseEntity<Resource> download(String documentName, String documentCategory) throws IOException, SQLException, CustomExceptionHandlerInternalServerError {
 
-    @RequestMapping(path = "download", method = RequestMethod.GET)
-    public ResponseEntity<Resource> download(String documentName, String documentCategory) throws IOException, SQLException {
-
+        if(documentName == null || documentCategory == null){
+            throw new CustomExceptionHandlerInternalServerError("Please insert values for document name and/or document category");
+        }
         File file = new File(documentName);
         HttpHeaders headers = new HttpHeaders();
         headers.add("Cache-Control", "no-cache, no-store, must-revalidate");

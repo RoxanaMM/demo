@@ -12,7 +12,7 @@ import java.util.Date;
 public class Document {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "document_id", updatable = false, nullable = false)
     private long documentId;
 
@@ -32,12 +32,23 @@ public class Document {
         this.documentId = getDocumentId();
     }
 
+    public Document(long documentId, String documentName, String documentCategory, String documentMimeType) {
+        this.documentId = documentId;
+        this.documentName = documentName;
+        this.documentCategory = documentCategory;
+        this.documentMimeType = documentMimeType;
+    }
+
     public long getDocumentId() {
-        return documentId;
+        return documentId = randomUniqueIdGenerator();
     }
 
     public void setDocumentId(long documentId) {
         this.documentId = documentId;
+    }
+
+    private long randomUniqueIdGenerator() {
+        return (long) (new Date().getTime() / 1000);
     }
 
     @Column(name = "document_name", nullable = false)

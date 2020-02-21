@@ -1,5 +1,6 @@
 package com.example.demo.repository;
 
+import com.example.demo.exceptionHandler.CustomExceptionHandlerInternalServerError;
 import com.example.demo.model.Document;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -11,5 +12,5 @@ public interface CustomDocumentRepository {
 
     List<Document> findByCategory(String documentCategory) throws SQLException;
 
-    Document saveDocument(String fileName) throws SQLException;
+    Document saveDocument(Document document, String fileName) throws SQLException, CustomExceptionHandlerInternalServerError;
 }

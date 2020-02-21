@@ -1,6 +1,9 @@
 package com.example.demo.repository;
 
+import com.example.demo.exceptionHandler.CustomExceptionHandlerInternalServerError;
 import com.example.demo.model.Document;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.sql.DataSource;
@@ -16,6 +19,7 @@ public class CustomDocumentRepositoryImpl implements CustomDocumentRepository {
     @Autowired
     private DataSource dataSource;
     private final String selectAllFromDB = "SELECT * FROM DOCUMENTS DOC WHERE";
+    private static final Logger LOGGER = LoggerFactory.getLogger(CustomDocumentRepositoryImpl.class);
 
     private Document populateDocumentWithValFromDb(ResultSet resultSet) throws SQLException {
         Document document = new Document();
@@ -64,8 +68,7 @@ public class CustomDocumentRepositoryImpl implements CustomDocumentRepository {
     }
 
     @Override
-    public Document saveDocument(String fileName) throws SQLException {
-        Document document = new Document();
+    public Document saveDocument(Document document, String fileName) throws CustomExceptionHandlerInternalServerError, SQLException {
         try (Connection conn = dataSource.getConnection()) {
             String sqlQuery = "INSERT INTO DOCUMENTS VALUES ( ?,?,?,?)";
             PreparedStatement preparedStatement = conn.prepareStatement(sqlQuery);
@@ -75,6 +78,7 @@ public class CustomDocumentRepositoryImpl implements CustomDocumentRepository {
             preparedStatement.setString(4, document.getDocumentMimeType());
 
             int rowsInserted = preparedStatement.executeUpdate();
+            LOGGER.info("Rows inserted: " + rowsInserted);
             document.setDocumentName(fileName);
             preparedStatement.close();
         }
