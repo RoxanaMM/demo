@@ -1,9 +1,9 @@
-package com.example.demo;
+package com.task.home.assignment;
 
 
-import com.example.demo.exceptionHandler.CustomExceptionHandlerInternalServerError;
-import com.example.demo.model.Document;
-import com.example.demo.repository.DocumentRepository;
+import com.task.home.assignment.exceptionHandler.CustomExceptionHandlerInternalServerError;
+import com.task.home.assignment.model.Document;
+import com.task.home.assignment.repository.DocumentRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;

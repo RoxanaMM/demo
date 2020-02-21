@@ -1,9 +1,9 @@
-package com.example.demo.controller;
+package com.task.home.assignment.controller;
 
-import com.example.demo.exceptionHandler.CustomExceptionHandlerInternalServerError;
-import com.example.demo.model.Document;
-import com.example.demo.repository.DocumentRepository;
-import com.example.demo.service.FileStorageService;
+import com.task.home.assignment.exceptionHandler.CustomExceptionHandlerInternalServerError;
+import com.task.home.assignment.model.Document;
+import com.task.home.assignment.repository.DocumentRepository;
+import com.task.home.assignment.service.FileStorageService;
 import io.swagger.annotations.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -1,6 +1,6 @@
-package com.example.demo.service;
+package com.task.home.assignment.service;
 
-import com.example.demo.model.Document;
+import com.task.home.assignment.model.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;

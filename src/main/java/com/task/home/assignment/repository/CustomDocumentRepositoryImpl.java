@@ -1,7 +1,7 @@
-package com.example.demo.repository;
+package com.task.home.assignment.repository;
 
-import com.example.demo.exceptionHandler.CustomExceptionHandlerInternalServerError;
-import com.example.demo.model.Document;
+import com.task.home.assignment.exceptionHandler.CustomExceptionHandlerInternalServerError;
+import com.task.home.assignment.model.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

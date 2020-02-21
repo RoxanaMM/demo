@@ -1,4 +1,4 @@
-package com.example.demo.model;
+package com.task.home.assignment.model;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;

@@ -1,7 +1,7 @@
-package com.example.demo.repository;
+package com.task.home.assignment.repository;
 
 
-import com.example.demo.model.Document;
+import com.task.home.assignment.model.Document;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

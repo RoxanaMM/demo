@@ -1,8 +1,7 @@
-package com.example.demo.repository;
+package com.task.home.assignment.repository;
 
-import com.example.demo.exceptionHandler.CustomExceptionHandlerInternalServerError;
-import com.example.demo.model.Document;
-import org.springframework.web.multipart.MultipartFile;
+import com.task.home.assignment.exceptionHandler.CustomExceptionHandlerInternalServerError;
+import com.task.home.assignment.model.Document;
 
 import java.sql.SQLException;
 import java.util.List;
