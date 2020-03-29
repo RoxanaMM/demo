@@ -8,7 +8,6 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.regex.Pattern;
 
 @Service
 public class FileStorageService {
@@ -17,7 +16,6 @@ public class FileStorageService {
     public Document checkValidityAndReturnDoc(MultipartFile file, String category) throws IOException {
         String fileName = StringUtils.cleanPath(file.getOriginalFilename());
         String extensionPattern = ".+(pdf|txt|doc|docx|png|gif|jpeg|jpg|zip|rar)$";
-        Pattern patternChecker = Pattern.compile(extensionPattern);
 
         if (!patternChecker.asPredicate().test(fileName.toLowerCase())) {
             LOGGER.info("Invalid file path name");

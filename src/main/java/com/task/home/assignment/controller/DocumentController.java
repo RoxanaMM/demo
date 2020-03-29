@@ -37,8 +37,8 @@ public class DocumentController {
     private DocumentRepository documentRepository;
     @Autowired
     private FileStorageService fileStorageService;
-    private static final Logger LOGGER= LoggerFactory.getLogger(DocumentController.class);
-    private static final String canonicProjectPath = "src/main/resources/documents/";
+    private static final Logger LOGGER = LoggerFactory.getLogger(DocumentController.class);
+    private final static String CANONIC_PROJECT_PATH = "src/main/resources/documents/";
 
     @ApiOperation(value = "List of available documents", response = List.class)
     @ApiResponses(value = {@ApiResponse(code = 200, message = "Success"),
@@ -55,9 +55,8 @@ public class DocumentController {
     public List<Document> getDocumentByCategory(
             @ApiParam(value = " ", required = true)
             @PathVariable(value = "documentCategory") String documentCategory)
-            throws ResourceNotFoundException, SQLException {
-        List<Document> documentsMatchingCategory = new ArrayList<Document>();
-        documentsMatchingCategory = documentRepository.findByCategory(documentCategory);
+            throws SQLException {
+        List<Document> documentsMatchingCategory = documentRepository.findByCategory(documentCategory);
         LOGGER.info("documents were found");
         return documentsMatchingCategory;
     }
@@ -77,12 +76,12 @@ public class DocumentController {
             LOGGER.info("file valid, saved in db");
 
             byte[] bytes = file.getBytes();
-            File f = new File(canonicProjectPath + folderCategory).getCanonicalFile();
+            File f = new File(CANONIC_PROJECT_PATH + folderCategory).getCanonicalFile();
             if (!f.exists()) {
                 f.mkdir();
             }
 
-            File canonicalFile = new File(canonicProjectPath + folderCategory + "/" + file.getOriginalFilename()).getCanonicalFile();
+            File canonicalFile = new File(CANONIC_PROJECT_PATH + folderCategory + "/" + file.getOriginalFilename()).getCanonicalFile();
             Path path = Paths.get(String.valueOf(canonicalFile));
             Files.write(path, bytes);
 
@@ -96,7 +95,7 @@ public class DocumentController {
     @GetMapping("/documents/download")
     public ResponseEntity<Resource> download(String documentName, String documentCategory) throws IOException, SQLException, CustomExceptionHandlerInternalServerError {
 
-        if(documentName == null || documentCategory == null){
+        if (documentName == null || documentCategory == null) {
             throw new CustomExceptionHandlerInternalServerError("Please insert values for document name and/or document category");
         }
         File file = new File(documentName);
@@ -105,16 +104,14 @@ public class DocumentController {
         headers.add("Pragma", "no-cache");
         headers.add("Expires", "0");
 
-        File canonicalFile = new File(canonicProjectPath + documentCategory + "/" + documentName).getCanonicalFile();
+        File canonicalFile = new File(CANONIC_PROJECT_PATH + documentCategory + "/" + documentName).getCanonicalFile();
         Path path = Paths.get(String.valueOf(canonicalFile));
-        try {
-            ByteArrayResource resource = new ByteArrayResource(Files.readAllBytes(path));
-            Document document = documentRepository.findByName(documentName);
+        ByteArrayResource resource = new ByteArrayResource(Files.readAllBytes(path));
+        Document document = documentRepository.findByName(documentName);
 
-            return ResponseEntity.ok().headers(headers).contentLength(resource.contentLength())
-                    .contentType(MediaType.parseMediaType(document.getDocumentMimeType())).body(resource);
-        } catch (IOException ex) {
-            throw new CustomExceptionHandlerInternalServerError("There is no file! ");
-        }
+        return ResponseEntity.ok().headers(headers).contentLength(file.length())
+                .contentType(MediaType.parseMediaType(document.getDocumentMimeType())).body(resource);
     }
+
+
 }
