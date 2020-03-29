@@ -18,7 +18,7 @@ public class CustomDocumentRepositoryImpl implements CustomDocumentRepository {
 
     @Autowired
     private DataSource dataSource;
-    private final String selectAllFromDB = "SELECT * FROM DOCUMENTS DOC WHERE";
+    private static final String selectAllFromDB = "SELECT * FROM DOCUMENTS DOC WHERE";
     private static final Logger LOGGER = LoggerFactory.getLogger(CustomDocumentRepositoryImpl.class);
 
     private Document populateDocumentWithValFromDb(ResultSet resultSet) throws SQLException {
@@ -36,16 +36,17 @@ public class CustomDocumentRepositoryImpl implements CustomDocumentRepository {
 
         try (Connection conn = dataSource.getConnection()) {
             String sqlQuery = selectAllFromDB + " DOC.DOCUMENT_CATEGORY LIKE ?";
-            PreparedStatement preparedStatement = conn.prepareStatement(sqlQuery);
-            preparedStatement.setString(1, "%" + documentCategory + "%");
-            ResultSet resultSet = preparedStatement.executeQuery();
-            while (resultSet.next()) {
-                Document document = populateDocumentWithValFromDb(resultSet);
-                documents.add(document);
+            try (PreparedStatement preparedStatement = conn.prepareStatement(sqlQuery)) {
+
+                preparedStatement.setString(1, "%" + documentCategory + "%");
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    while (resultSet.next()) {
+                        Document document = populateDocumentWithValFromDb(resultSet);
+                        documents.add(document);
+                    }
+                    return documents;
+                }
             }
-            resultSet.close();
-            preparedStatement.close();
-            return documents;
         }
     }
 
@@ -55,15 +56,15 @@ public class CustomDocumentRepositoryImpl implements CustomDocumentRepository {
 
         try (Connection conn = dataSource.getConnection()) {
             String sqlQuery = selectAllFromDB + " DOC.DOCUMENT_NAME LIKE ?";
-            PreparedStatement preparedStatement = conn.prepareStatement(sqlQuery);
-            preparedStatement.setString(1, "%" + documentName + "%");
-            ResultSet resultSet = preparedStatement.executeQuery();
-            if (resultSet.next()) {
-                document = populateDocumentWithValFromDb(resultSet);
+            try (PreparedStatement preparedStatement = conn.prepareStatement(sqlQuery)) {
+                preparedStatement.setString(1, "%" + documentName + "%");
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    if (resultSet.next()) {
+                        document = populateDocumentWithValFromDb(resultSet);
+                    }
+                    return document;
+                }
             }
-            resultSet.close();
-            preparedStatement.close();
-            return document;
         }
     }
 
@@ -71,16 +72,16 @@ public class CustomDocumentRepositoryImpl implements CustomDocumentRepository {
     public Document saveDocument(Document document, String fileName) throws CustomExceptionHandlerInternalServerError, SQLException {
         try (Connection conn = dataSource.getConnection()) {
             String sqlQuery = "INSERT INTO DOCUMENTS VALUES ( ?,?,?,?)";
-            PreparedStatement preparedStatement = conn.prepareStatement(sqlQuery);
-            preparedStatement.setLong(1, document.getDocumentId());
-            preparedStatement.setString(2, fileName);
-            preparedStatement.setString(3, document.getDocumentCategory());
-            preparedStatement.setString(4, document.getDocumentMimeType());
+            try (PreparedStatement preparedStatement = conn.prepareStatement(sqlQuery)) {
+                preparedStatement.setLong(1, document.getDocumentId());
+                preparedStatement.setString(2, fileName);
+                preparedStatement.setString(3, document.getDocumentCategory());
+                preparedStatement.setString(4, document.getDocumentMimeType());
 
-            int rowsInserted = preparedStatement.executeUpdate();
-            LOGGER.info("Rows inserted: " + rowsInserted);
-            document.setDocumentName(fileName);
-            preparedStatement.close();
+                int rowsInserted = preparedStatement.executeUpdate();
+                LOGGER.info("Rows inserted: {}", rowsInserted);
+                document.setDocumentName(fileName);
+            }
         }
         return document;
     }

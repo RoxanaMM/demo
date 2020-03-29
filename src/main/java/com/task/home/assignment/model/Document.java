@@ -40,7 +40,8 @@ public class Document {
     }
 
     public long getDocumentId() {
-        return documentId = randomUniqueIdGenerator();
+        documentId = randomUniqueIdGenerator();
+        return documentId;
     }
 
     public void setDocumentId(long documentId) {
@@ -48,7 +49,7 @@ public class Document {
     }
 
     private long randomUniqueIdGenerator() {
-        return (long) (new Date().getTime() / 1000);
+        return (new Date().getTime() / 1000);
     }
 
     @Column(name = "document_name", nullable = false)
