@@ -76,11 +76,13 @@ public class CustomDocumentRepositoryImpl implements CustomDocumentRepository {
             preparedStatement.setString(2, fileName);
             preparedStatement.setString(3, document.getDocumentCategory());
             preparedStatement.setString(4, document.getDocumentMimeType());
-
-            int rowsInserted = preparedStatement.executeUpdate();
-            LOGGER.info("Rows inserted: " + rowsInserted);
-            document.setDocumentName(fileName);
-            preparedStatement.close();
+            try {
+                int rowsInserted = preparedStatement.executeUpdate();
+                LOGGER.info("Rows inserted: " + rowsInserted);
+                document.setDocumentName(fileName);
+            } finally {
+                preparedStatement.close();
+            }
         }
         return document;
     }

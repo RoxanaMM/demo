@@ -19,7 +19,7 @@ public class FileStorageService {
         String extensionPattern = ".+(pdf|txt|doc|docx|png|gif|jpeg|jpg|zip|rar)$";
         Pattern patternChecker = Pattern.compile(extensionPattern);
 
-        if (!fileName.toLowerCase().matches(extensionPattern)) {
+        if (!patternChecker.asPredicate().test(fileName.toLowerCase())) {
             LOGGER.info("Invalid file path name");
             throw new IOException("Sorry! Filename contains invalid path sequence " + fileName);
         }

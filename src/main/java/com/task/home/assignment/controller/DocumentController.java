@@ -107,12 +107,14 @@ public class DocumentController {
 
         File canonicalFile = new File(canonicProjectPath + documentCategory + "/" + documentName).getCanonicalFile();
         Path path = Paths.get(String.valueOf(canonicalFile));
-        ByteArrayResource resource = new ByteArrayResource(Files.readAllBytes(path));
-        Document document = documentRepository.findByName(documentName);
+        try {
+            ByteArrayResource resource = new ByteArrayResource(Files.readAllBytes(path));
+            Document document = documentRepository.findByName(documentName);
 
-        return ResponseEntity.ok().headers(headers).contentLength(file.length())
-                .contentType(MediaType.parseMediaType("application/octet-stream")).body(resource);
+            return ResponseEntity.ok().headers(headers).contentLength(resource.contentLength())
+                    .contentType(MediaType.parseMediaType(document.getDocumentMimeType())).body(resource);
+        } catch (IOException ex) {
+            throw new CustomExceptionHandlerInternalServerError("There is no file! ");
+        }
     }
-
-
 }
