@@ -1,6 +1,6 @@
 package com.task.home.assignment.repository;
 
-import com.task.home.assignment.exceptionHandler.CustomExceptionHandlerInternalServerError;
+import com.task.home.assignment.exception.handler.CustomExceptionHandlerInternalServerError;
 import com.task.home.assignment.model.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

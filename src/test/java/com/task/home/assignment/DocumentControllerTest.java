@@ -1,7 +1,7 @@
 package com.task.home.assignment;
 
 
-import com.task.home.assignment.exceptionHandler.CustomExceptionHandlerInternalServerError;
+import com.task.home.assignment.exception.handler.CustomExceptionHandlerInternalServerError;
 import com.task.home.assignment.model.Document;
 import com.task.home.assignment.repository.DocumentRepository;
 import org.junit.jupiter.api.Test;
