@@ -1,14 +1,15 @@
 package com.task.home.assignment.model;
 
 public enum AllowedFileExtension {
-    pdf,
-    txt,
-    doc,
-    docx,
-    png,
-    gif,
-    jpeg,
-    jpg,
-    zip,
-    rar;
+    PDF,
+    TXT,
+    DOC,
+    DOCX,
+    PNG,
+    GIF,
+    JPEG,
+    JPG,
+    ZIP,
+    RAR;
+
 }

@@ -33,7 +33,7 @@ public class FileUploadValidationService {
         }
         String inputFileExtension = Files.getFileExtension(file.getOriginalFilename());
         Stream<AllowedFileExtension> allowedFileExtensionStream = Arrays.stream(AllowedFileExtension.values());
-        if (allowedFileExtensionStream.noneMatch(extension -> (extension.name().equals(inputFileExtension)))) {
+        if (allowedFileExtensionStream.noneMatch(extension -> (extension.name().equalsIgnoreCase(inputFileExtension)))) {
             LOGGER.info("Invalid file path name");
             throw new IllegalArgumentException("Sorry! Filename contains invalid path sequence " + file.getName());
         }

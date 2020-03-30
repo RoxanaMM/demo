@@ -15,7 +15,9 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2WebMvc;
 @EnableSwagger2WebMvc
 public class Swagger2Config {
     @Bean
-    public Docket api() {
+    public Docket
+
+    api() {
         return new Docket(DocumentationType.SWAGGER_2).select()
                 .apis(RequestHandlerSelectors
                         .basePackage("com.task.home.assignment.controller"))

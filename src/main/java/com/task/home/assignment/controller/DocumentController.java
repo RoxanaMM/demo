@@ -68,7 +68,7 @@ public class DocumentController {
     @Transactional
     @PostMapping(value = "/documents/upload")
     public @ResponseBody
-    Document uploadFile(MultipartFile file, String folderCategory) throws IOException, SQLException, CustomExceptionHandlerInternalServerError {
+    Document uploadFile(MultipartFile file, String folderCategory) throws SQLException, CustomExceptionHandlerInternalServerError {
         fileUploadValidationService.checkFileValidy(file);
         Document document = fileGeneratorService.generateDocument(file, folderCategory);
         documentRepository.saveDocument(document, file.getOriginalFilename());
