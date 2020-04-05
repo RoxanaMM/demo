@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 @Service
 public class FileWriterService {
@@ -17,7 +18,7 @@ public class FileWriterService {
 
     public void writeToDisk(MultipartFile file, String folderCategory) {
         try {
-            Path pathToReadFileFrom = Path.of(CANONICAL_PROJECT_PATH, folderCategory);
+            Path pathToReadFileFrom = Paths.get(CANONICAL_PROJECT_PATH, folderCategory);
             if (!Files.isDirectory(pathToReadFileFrom)) {
                 File f = new File(pathToReadFileFrom.toString());
                 f.mkdir();

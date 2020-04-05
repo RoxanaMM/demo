@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Optional;
 
 
 @RestController
@@ -68,23 +69,30 @@ public class DocumentController {
     @Transactional
     @PostMapping(value = "/documents/upload")
     public @ResponseBody
-    Document uploadFile(MultipartFile file, String folderCategory) throws SQLException, CustomExceptionHandlerInternalServerError {
+    Document uploadFile(Optional<MultipartFile> file, Optional<String> documentCategory) throws SQLException, CustomExceptionHandlerInternalServerError {
         fileUploadValidationService.checkFileValidy(file);
-        Document document = fileGeneratorService.generateDocument(file, folderCategory);
-        documentRepository.saveDocument(document, file.getOriginalFilename());
+
+        MultipartFile validatedFile = file.get();
+        String validatedDocumentCategory = documentCategory.get();
+
+        Document document = fileGeneratorService.generateDocument(validatedFile, validatedDocumentCategory);
+        documentRepository.saveDocument(document, validatedDocumentCategory);
         LOGGER.info("file valid, saved in db");
-        fileWriterService.writeToDisk(file, folderCategory);
+        fileWriterService.writeToDisk(validatedFile, validatedDocumentCategory);
         return document;
     }
 
     @ApiOperation(value = "Download a file with a category")
     @GetMapping("/documents/download")
-    public ResponseEntity<Resource> download(String documentName, String documentCategory) throws IOException, SQLException, CustomExceptionHandlerInternalServerError {
-        fileUploadValidationService.checkValidDocumentDescription(documentName, documentCategory);
-        Document document = documentRepository.findByName(documentName);
-        ByteArrayResource resource = fileReaderService.readFile(documentName, documentCategory);
+    public ResponseEntity<Resource> download(Optional<String> documentName, Optional<String> documentCategory) throws IOException, SQLException, CustomExceptionHandlerInternalServerError {
+        fileUploadValidationService.checkDocumentValidity(documentName, documentCategory);
 
-        File file = new File(documentName);
+        String validatedDocumentName = documentName.get();
+        String validatedDocumentCategory = documentCategory.get();
+
+        Document document = documentRepository.findByName(validatedDocumentName);
+        ByteArrayResource resource = fileReaderService.readFile(validatedDocumentName, validatedDocumentCategory);
+        File file = new File(validatedDocumentName);
         return ResponseEntity.ok().contentLength(file.length())
                 .contentType(MediaType.parseMediaType(document.getDocumentMimeType())).body(resource);
     }

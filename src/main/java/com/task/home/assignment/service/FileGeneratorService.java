@@ -21,4 +21,11 @@ public class FileGeneratorService {
         LOGGER.info("Document was successfully created");
         return document;
     }
+
+    public Document generateDocumentFromObject(Object documentObject) {
+        Document document = (Document) documentObject;
+
+        return new Document(document.getDocumentId(), document.getDocumentName(),
+                document.getDocumentCategory(), document.getDocumentMimeType());
+    }
 }

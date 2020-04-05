@@ -15,6 +15,7 @@ public class CustomExceptionHandlerInternalServerError extends Exception {
 
     public CustomExceptionHandlerInternalServerError(String message) {
         super(message);
+      //  new CustomExceptionHandlerInternalServerError();
     }
 
     public CustomExceptionHandlerInternalServerError(Throwable cause) {
